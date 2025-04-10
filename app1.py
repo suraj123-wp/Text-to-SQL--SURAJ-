@@ -140,10 +140,6 @@ db_config = {
     "password": "Sonali1@2",     # Your MySQL password (replace with your password)
     "database": "sales_data_db", # Your MySQL database name
     "unix_socket": None,         # Disable socket (ensure TCP/IP usage)
-    #"ssl_ca": "/path/to/ca-cert.pem",  # Path to CA cert
-    #"ssl_cert": "/path/to/client-cert.pem",  # Path to client cert
-    #"ssl_key": "/path/to/client-key.pem",   # Path to client key
-    "ssl_cipher": "TLS_AES_128_GCM_SHA256" # Enforce TLS_AES_128_GCM_SHA256 cipher
 }
 
 if submit and question:
