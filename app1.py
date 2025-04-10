@@ -82,16 +82,14 @@ def get_gemini_response(question, prompt):
     try:
         model = genai.GenerativeModel(MODEL_NAME)
         response = model.generate_content([prompt, question])
-        # Remove any unwanted formatting or markdown characters from the SQL query
         sql_query = response.text.strip()
-        # Clean up the query further if needed
         sql_query = sql_query.replace('```sql', '').replace('```', '').strip()
         return sql_query
     except Exception as e:
         st.error(f"Error generating SQL: {str(e)}")
         return None
 
-# ✅ Function to execute SQL query on MySQL
+# ✅ Function to execute SQL query on MySQL with SSL configuration
 def read_mysql_query(sql, db_config):
     try:
         conn = mysql.connector.connect(**db_config)
@@ -134,14 +132,18 @@ question = st.text_input("🔍 Ask your data question (in plain English):", key=
 # Button to generate SQL query and run it
 submit = st.button("Get SQL & Run")
 
-# MySQL connection config (change to match your database credentials)
+# MySQL connection config with SSL enabled (change paths to match your environment)
 db_config = {
     "host": "127.0.0.1",         # Forces TCP/IP connection
     "port": 3306,                # MySQL port (default: 3306)
     "user": "root",              # Your MySQL username (default: root)
     "password": "Sonali1@2",     # Your MySQL password (replace with your password)
     "database": "sales_data_db", # Your MySQL database name
-    "unix_socket": None          # Disable socket (ensure TCP/IP usage)
+    "unix_socket": None,         # Disable socket (ensure TCP/IP usage)
+    #"ssl_ca": "/path/to/ca-cert.pem",  # Path to CA cert
+    #"ssl_cert": "/path/to/client-cert.pem",  # Path to client cert
+    #"ssl_key": "/path/to/client-key.pem",   # Path to client key
+    "ssl_cipher": "TLS_AES_128_GCM_SHA256" # Enforce TLS_AES_128_GCM_SHA256 cipher
 }
 
 if submit and question:
