@@ -20,58 +20,58 @@ MODEL_NAME = "models/gemini-2.0-flash-lite"  # Change to "gemini-1.5-pro" if you
 
 prompt = """
 You are a SQL expert. Convert the user's natural language request into a valid SQL query.
-Assume the database is MySQL and there is a table called 'sales_data' with the following columns:
+Assume the database is MySQL and there is a table called 'sales_data_db.sales_data' with the following columns:
 sale_date, Channel, Product_Name, City, Quantity, Sales.
 Only return the SQL query. Do not include explanations or extra text.
 
 Examples:
 
 1. "Show total sales and quantity per city" means:
-   SELECT City, SUM(Sales) AS Total_Sales, SUM(Quantity) AS Total_Quantity FROM sales_data GROUP BY City
+   SELECT City, SUM(Sales) AS Total_Sales, SUM(Quantity) AS Total_Quantity FROM sales_data_db.sales_data GROUP BY City
 
 2. "Which city had the highest sales in 2024" means:
-   SELECT City, SUM(Sales) AS Total_Sales FROM sales_data WHERE sale_date BETWEEN '2024-01-01' AND '2024-12-31' GROUP BY City ORDER BY Total_Sales DESC LIMIT 1
+   SELECT City, SUM(Sales) AS Total_Sales FROM sales_data_db.sales_data WHERE sale_date BETWEEN '2024-01-01' AND '2024-12-31' GROUP BY City ORDER BY Total_Sales DESC LIMIT 1
 
 3. "Get monthly sales for Product 2 in 2025" means:
-   SELECT DATE_FORMAT(sale_date, '%Y-%m') AS Month, SUM(Sales) AS Total_Sales FROM sales_data WHERE Product_Name = 'Product 2' AND sale_date BETWEEN '2025-01-01' AND '2025-12-31' GROUP BY Month ORDER BY Month
+   SELECT DATE_FORMAT(sale_date, '%Y-%m') AS Month, SUM(Sales) AS Total_Sales FROM sales_data_db.sales_data WHERE Product_Name = 'Product 2' AND sale_date BETWEEN '2025-01-01' AND '2025-12-31' GROUP BY Month ORDER BY Month
 
 4. "Show top 3 cities by total quantity sold" means:
-   SELECT City, SUM(Quantity) AS Total_Quantity FROM sales_data GROUP BY City ORDER BY Total_Quantity DESC LIMIT 3
+   SELECT City, SUM(Quantity) AS Total_Quantity FROM sales_data_db.sales_data GROUP BY City ORDER BY Total_Quantity DESC LIMIT 3
 
 5. "List product names with their total sales" means:
-   SELECT Product_Name, SUM(Sales) FROM sales_data GROUP BY Product_Name
+   SELECT Product_Name, SUM(Sales) FROM sales_data_db.sales_data GROUP BY Product_Name
 
 6. "Find total quantity sold for each channel in the last 6 months" means:
-   SELECT Channel, SUM(Quantity) FROM sales_data WHERE sale_date >= CURDATE() - INTERVAL 6 MONTH GROUP BY Channel
+   SELECT Channel, SUM(Quantity) FROM sales_data_db.sales_data WHERE sale_date >= CURDATE() - INTERVAL 6 MONTH GROUP BY Channel
 
 7. "What is the average sales per transaction for Product 2" means:
-   SELECT AVG(Sales) FROM sales_data WHERE Product_Name = 'Product 2'
+   SELECT AVG(Sales) FROM sales_data_db.sales_data WHERE Product_Name = 'Product 2'
 
 8. "Rank cities based on total sales" means:
-   SELECT City, SUM(Sales) AS Total_Sales, RANK() OVER (ORDER BY SUM(Sales) DESC) AS Rank FROM sales_data GROUP BY City
+   SELECT City, SUM(Sales) AS Total_Sales, RANK() OVER (ORDER BY SUM(Sales) DESC) AS Rank FROM sales_data_db.sales_data GROUP BY City
 
 9. "Get sales in City1 for Channel 1 in October 2024" means:
-   SELECT * FROM sales_data WHERE City = 'City1' AND Channel = 'Channel 1' AND sale_date BETWEEN '2024-10-01' AND '2024-10-31'
+   SELECT * FROM sales_data_db.sales_data WHERE City = 'City1' AND Channel = 'Channel 1' AND sale_date BETWEEN '2024-10-01' AND '2024-10-31'
 
 10. "Compare sales in January and February 2025" means:
-    SELECT DATE_FORMAT(sale_date, '%Y-%m') AS Month, SUM(Sales) FROM sales_data WHERE sale_date BETWEEN '2025-01-01' AND '2025-02-28' GROUP BY Month
+    SELECT DATE_FORMAT(sale_date, '%Y-%m') AS Month, SUM(Sales) FROM sales_data_db.sales_data WHERE sale_date BETWEEN '2025-01-01' AND '2025-02-28' GROUP BY Month
 
 11. "What are the monthly sales across platform1 since Jan 2025?" means:
     SELECT DATE_FORMAT(sale_date, '%Y-%m') AS Month, SUM(Sales) AS Total_Sales
-    FROM sales_data
+    FROM sales_data_db.sales_data
     WHERE Channel = 'Channel 1' AND sale_date >= '2025-01-01'
     GROUP BY Month
     ORDER BY Month;
 
 12. "What is the share of units sold across various platforms since Jan 2025?" means:
-    SELECT Channel, SUM(Quantity) AS Total_Quantity, (SUM(Quantity) / (SELECT SUM(Quantity) FROM sales_data WHERE sale_date >= '2025-01-01')) * 100 AS Share_Percent
-    FROM sales_data
+    SELECT Channel, SUM(Quantity) AS Total_Quantity, (SUM(Quantity) / (SELECT SUM(Quantity) FROM sales_data_db.sales_data WHERE sale_date >= '2025-01-01')) * 100 AS Share_Percent
+    FROM sales_data_db.sales_data
     WHERE sale_date >= '2025-01-01'
     GROUP BY Channel;
 
 13. "Can you tell me the top 5 days with the highest daily units sold?" means:
     SELECT sale_date, SUM(Quantity) AS Total_Quantity
-    FROM sales_data
+    FROM sales_data_db.sales_data
     GROUP BY sale_date
     ORDER BY Total_Quantity DESC
     LIMIT 5;
@@ -89,7 +89,7 @@ def get_gemini_response(question, prompt):
         st.error(f"Error generating SQL: {str(e)}")
         return None
 
-# ✅ Function to execute SQL query on MySQL with SSL configuration
+# ✅ Function to execute SQL query on MySQL with SSL disabled
 def read_mysql_query(sql, db_config):
     try:
         conn = mysql.connector.connect(**db_config)
@@ -132,7 +132,7 @@ question = st.text_input("🔍 Ask your data question (in plain English):", key=
 # Button to generate SQL query and run it
 submit = st.button("Get SQL & Run")
 
-# MySQL connection config with SSL enabled (change paths to match your environment)
+# MySQL connection config with SSL disabled (add ssl_disabled)
 db_config = {
     "host": "127.0.0.1",         # Forces TCP/IP connection
     "port": 3306,                # MySQL port (default: 3306)
@@ -140,6 +140,7 @@ db_config = {
     "password": "Sonali1@2",     # Your MySQL password (replace with your password)
     "database": "sales_data_db", # Your MySQL database name
     "unix_socket": None,         # Disable socket (ensure TCP/IP usage)
+    "ssl_disabled": True,        # Disable SSL
 }
 
 if submit and question:
@@ -150,10 +151,10 @@ if submit and question:
             st.subheader("🧠 Generated SQL Query:")
             st.code(sql_query, language="sql")
 
-            # List tables in the MySQL database to check if 'sales_data' exists
+            # List tables in the MySQL database to check if 'sales_data_db.sales_data' exists
             tables = list_tables(db_config)
             
-            # Execute SQL query and show results if 'sales_data' exists
+            # Execute SQL query and show results if 'sales_data_db.sales_data' exists
             if ('sales_data',) in tables:
                 data, columns = read_mysql_query(sql_query, db_config)
 
@@ -169,4 +170,4 @@ if submit and question:
                 else:
                     st.warning("No data returned.")
             else:
-                st.error("Table 'sales_data' does not exist in the database.")
+                st.error("Table 'sales_data_db.sales_data' does not exist in the database.")
